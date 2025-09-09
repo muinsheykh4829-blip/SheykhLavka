@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Endpoints Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>API Endpoints Test</h1>
+    
+    <div class="test-section">
+        <h3>1. Категории</h3>
+        <button onclick="testCategories()">Тест GET /categories</button>
+        <div id="categories-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Товары</h3>
+        <button onclick="testProducts()">Тест GET /products</button>
+        <button onclick="testProductsByCategory()">Тест GET /products?category_id=1</button>
+        <div id="products-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Баннеры</h3>
+        <button onclick="testBanners()">Тест GET /banners</button>
+        <div id="banners-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>4. Аутентификация</h3>
+        <button onclick="testAuth()">Полный тест аутентификации</button>
+        <div id="auth-result" class="result"></div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://127.0.0.1:8000/api/v1';
+
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                const data = await response.json();
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testCategories() {
+            const result = document.getElementById('categories-result');
+            result.innerHTML = 'Тестирование...';
+            
+            const response = await makeRequest(`${baseUrl}/categories`);
+            
+            if (response.success) {
+                result.className = 'result success';
+                result.innerHTML = `✓ Успех: Найдено ${response.data.data.length} категорий<br><pre>${JSON.stringify(response.data, null, 2)}</pre>`;
+            } else {
+                result.className = 'result error';
+                result.innerHTML = `✗ Ошибка: ${response.error || response.data.message}`;
+            }
+        }
+
+        async function testProducts() {
+            const result = document.getElementById('products-result');
+            result.innerHTML = 'Тестирование товаров...';
+            
+            const response = await makeRequest(`${baseUrl}/products`);
+            
+            if (response.success) {
+                result.className = 'result success';
+                result.innerHTML = `✓ Успех: Найдено товаров<br><pre>${JSON.stringify(response.data, null, 2)}</pre>`;
+            } else {
+                result.className = 'result error';
+                result.innerHTML = `✗ Ошибка: ${response.error || response.data.message}`;
+            }
+        }
+
+        async function testProductsByCategory() {
+            const result = document.getElementById('products-result');
+            result.innerHTML = 'Тестирование товаров по категории...';
+            
+            const response = await makeRequest(`${baseUrl}/products?category_id=1`);
+            
+            if (response.success) {
+                result.className = 'result success';
+                result.innerHTML = `✓ Успех: Товары по категории 1<br><pre>${JSON.stringify(response.data, null, 2)}</pre>`;
+            } else {
+                result.className = 'result error';
+                result.innerHTML = `✗ Ошибка: ${response.error || response.data.message}`;
+            }
+        }
+
+        async function testBanners() {
+            const result = document.getElementById('banners-result');
+            result.innerHTML = 'Тестирование баннеров...';
+            
+            const response = await makeRequest(`${baseUrl}/banners`);
+            
+            if (response.success) {
+                result.className = 'result success';
+                result.innerHTML = `✓ Успех: Найдено ${response.data.data.length} баннеров<br><pre>${JSON.stringify(response.data, null, 2)}</pre>`;
+            } else {
+                result.className = 'result error';
+                result.innerHTML = `✗ Ошибка: ${response.error || response.data.message}`;
+            }
+        }
+
+        async function testAuth() {
+            const result = document.getElementById('auth-result');
+            result.innerHTML = 'Тестирование аутентификации...';
+            
+            const phone = '+998' + Math.floor(Math.random() * 1000000000);
+            
+            // 1. Регистрация
+            const registerResponse = await makeRequest(`${baseUrl}/auth/register`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: 'Test User',
+                    phone: phone,
+                    password: 'testpassword123',
+                    password_confirmation: 'testpassword123'
+                })
+            });
+
+            if (!registerResponse.success) {
+                result.className = 'result error';
+                result.innerHTML = `✗ Ошибка регистрации: ${registerResponse.error || registerResponse.data.message}`;
+                return;
+            }
+
+            const userId = registerResponse.data.data.user_id;
+            const verificationCode = registerResponse.data.data.verification_code;
+
+            // 2. Подтверждение кода
+            const verifyResponse = await makeRequest(`${baseUrl}/auth/verify-code`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    user_id: userId,
+                    code: verificationCode
+                })
+            });
+
+            if (!verifyResponse.success) {
+                result.className = 'result error';
+                result.innerHTML = `✗ Ошибка подтверждения: ${verifyResponse.error || verifyResponse.data.message}`;
+                return;
+            }
+
+            const token = verifyResponse.data.data.token;
+
+            // 3. Тест защищенного маршрута
+            const profileResponse = await makeRequest(`${baseUrl}/profile`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            result.className = 'result success';
+            result.innerHTML = `
+                ✓ Полный тест аутентификации пройден!<br>
+                1. Регистрация: ✓<br>
+                2. Подтверждение кода: ✓<br>
+                3. Получен токен: ${token.substring(0, 20)}...<br>
+                4. Защищенный маршрут: ${profileResponse.success ? '✓' : '✗'}
+            `;
+        }
+    </script>
+</body>
+</html>

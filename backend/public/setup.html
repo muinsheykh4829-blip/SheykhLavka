@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Настройка базы данных</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+        .btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #0056b3; }
+        .success { color: green; padding: 10px; background: #d4edda; border-radius: 5px; margin: 10px 0; }
+        .error { color: red; padding: 10px; background: #f8d7da; border-radius: 5px; margin: 10px 0; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .result { margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Настройка базы данных SQLite</h1>
+        
+        <div class="result" id="result"></div>
+        
+        <button class="btn" onclick="createTables()">🔨 Создать таблицы</button>
+        <button class="btn" onclick="checkTables()">📋 Проверить таблицы</button>
+        <button class="btn" onclick="createTestData()">📦 Создать тестовые данные</button>
+        <button class="btn" onclick="testAdmin()">👨‍💼 Тест админ панели</button>
+    </div>
+
+    <script>
+        async function createTables() {
+            showLoading();
+            try {
+                const response = await fetch('/create-db-tables', { 
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                
+                const text = await response.text();
+                console.log('Response text:', text);
+                
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    data = { error: 'Ответ не является JSON', response: text };
+                }
+                
+                showResult(data, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResult({ error: error.message }, 'error');
+            }
+        }
+        
+        async function checkTables() {
+            showLoading();
+            try {
+                const response = await fetch('/test-json', {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                console.log('Check tables response status:', response.status);
+                
+                const text = await response.text();
+                console.log('Check tables response text:', text);
+                
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    data = { error: 'Ответ не является JSON', response: text };
+                }
+                
+                showResult(data, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResult({ error: error.message }, 'error');
+            }
+        }
+        
+        async function createTestData() {
+            showLoading();
+            try {
+                const response = await fetch('/create-test-data', { 
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const text = await response.text();
+                
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    data = { error: 'Ответ не является JSON', response: text };
+                }
+                
+                showResult(data, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResult({ error: error.message }, 'error');
+            }
+        }
+        
+        async function testAdmin() {
+            showLoading();
+            window.open('/admin/categories', '_blank');
+            showResult({ message: 'Админ панель открыта в новой вкладке' }, 'success');
+        }
+        
+        function showLoading() {
+            document.getElementById('result').innerHTML = '<div class="success">⏳ Загрузка...</div>';
+        }
+        
+        function showResult(data, type) {
+            const resultDiv = document.getElementById('result');
+            const className = type === 'success' ? 'success' : 'error';
+            
+            let content = `<div class="${className}">`;
+            if (data.status === 'success' || type === 'success') {
+                content += '✅ ' + (data.message || 'Операция выполнена успешно');
+                if (data.tables) {
+                    content += '<br><strong>Таблицы:</strong><br>';
+                    data.tables.forEach(table => {
+                        content += `- ${table.name}<br>`;
+                    });
+                }
+                if (data.users || data.categories || data.products) {
+                    content += '<br><strong>Статистика:</strong><br>';
+                    if (data.users) content += `- Пользователи: ${data.users}<br>`;
+                    if (data.categories) content += `- Категории: ${data.categories}<br>`;
+                    if (data.products) content += `- Продукты: ${data.products}<br>`;
+                }
+            } else {
+                content += '❌ ' + (data.message || data.error || 'Произошла ошибка');
+            }
+            content += '</div>';
+            
+            if (typeof data === 'object' && Object.keys(data).length > 0) {
+                content += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            }
+            
+            resultDiv.innerHTML = content;
+        }
+        
+        // Автоматически проверяем статус при загрузке
+        window.onload = checkTables;
+    </script>
+</body>
+</html>

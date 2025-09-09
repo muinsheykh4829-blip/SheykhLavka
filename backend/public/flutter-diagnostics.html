@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flutter API Диагностика</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+        .btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #0056b3; }
+        .success { color: green; padding: 10px; background: #d4edda; border-radius: 5px; margin: 10px 0; }
+        .error { color: red; padding: 10px; background: #f8d7da; border-radius: 5px; margin: 10px 0; }
+        .info { color: blue; padding: 10px; background: #d1ecf1; border-radius: 5px; margin: 10px 0; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+        .result { margin: 20px 0; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Flutter API Полная Диагностика</h1>
+        
+        <div class="info">
+            <h3>📋 Проверим все компоненты системы:</h3>
+            <ul>
+                <li><strong>Laravel сервер:</strong> http://localhost:8000</li>
+                <li><strong>API базовый URL:</strong> http://10.0.2.2:8000/api/v1</li>
+                <li><strong>База данных:</strong> SQLite</li>
+            </ul>
+        </div>
+        
+        <div class="grid">
+            <div>
+                <h3>🖥️ Сервер</h3>
+                <button class="btn" onclick="testServer()">Тест Laravel</button>
+                <button class="btn" onclick="testDatabase()">Тест БД</button>
+                <button class="btn" onclick="createTables()">Создать таблицы</button>
+                <button class="btn" onclick="createData()">Создать данные</button>
+            </div>
+            <div>
+                <h3>📱 API</h3>
+                <button class="btn" onclick="testAPIConnection()">Тест подключения</button>
+                <button class="btn" onclick="testCategories()">Тест категорий</button>
+                <button class="btn" onclick="testProducts()">Тест продуктов</button>
+                <button class="btn" onclick="testAuth()">Тест аутентификации</button>
+            </div>
+        </div>
+        
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        // Разные базовые URL для тестирования
+        const serverUrl = 'http://localhost:8000';
+        const apiUrl = 'http://localhost:8000/api/v1';
+        const flutterApiUrl = 'http://10.0.2.2:8000/api/v1';
+        
+        async function testServer() {
+            showLoading('Проверяем Laravel сервер...');
+            try {
+                const response = await fetch(`${serverUrl}/test-json`);
+                const data = await response.json();
+                showResult({
+                    test: 'Laravel Server',
+                    status: 'success',
+                    data: data
+                }, 'success');
+            } catch (error) {
+                showResult({
+                    test: 'Laravel Server',
+                    status: 'error',
+                    error: error.message
+                }, 'error');
+            }
+        }
+        
+        async function testDatabase() {
+            showLoading('Проверяем базу данных...');
+            try {
+                const response = await fetch(`${serverUrl}/test-db`);
+                const data = await response.json();
+                showResult({
+                    test: 'Database Connection',
+                    status: data.status === 'success' ? 'success' : 'error',
+                    data: data
+                }, data.status === 'success' ? 'success' : 'error');
+            } catch (error) {
+                showResult({
+                    test: 'Database Connection',
+                    status: 'error',
+                    error: error.message
+                }, 'error');
+            }
+        }
+        
+        async function createTables() {
+            showLoading('Создаем таблицы...');
+            try {
+                const response = await fetch(`${serverUrl}/create-db-tables`);
+                const data = await response.json();
+                showResult({
+                    test: 'Create Tables',
+                    status: data.status === 'success' ? 'success' : 'error',
+                    data: data
+                }, data.status === 'success' ? 'success' : 'error');
+            } catch (error) {
+                showResult({
+                    test: 'Create Tables',
+                    status: 'error',
+                    error: error.message
+                }, 'error');
+            }
+        }
+        
+        async function createData() {
+            showLoading('Создаем тестовые данные...');
+            try {
+                const response = await fetch(`${serverUrl}/create-test-data`);
+                const data = await response.json();
+                showResult({
+                    test: 'Create Test Data',
+                    status: data.status === 'success' ? 'success' : 'error',
+                    data: data
+                }, data.status === 'success' ? 'success' : 'error');
+            } catch (error) {
+                showResult({
+                    test: 'Create Test Data',
+                    status: 'error',
+                    error: error.message
+                }, 'error');
+            }
+        }
+        
+        async function testAPIConnection() {
+            showLoading('Тестируем API подключение...');
+            try {
+                const response = await fetch(`${apiUrl}/test`);
+                const data = await response.json();
+                showResult({
+                    test: 'API Connection',
+                    url: `${apiUrl}/test`,
+                    status: 'success',
+                    data: data
+                }, 'success');
+            } catch (error) {
+                showResult({
+                    test: 'API Connection',
+                    url: `${apiUrl}/test`,
+                    status: 'error',
+                    error: error.message
+                }, 'error');
+            }
+        }
+        
+        async function testCategories() {
+            showLoading('Тестируем API категорий...');
+            try {
+                const response = await fetch(`${apiUrl}/categories`);
+                const data = await response.json();
+                showResult({
+                    test: 'Categories API',
+                    url: `${apiUrl}/categories`,
+                    status: data.success ? 'success' : 'error',
+                    data: data
+                }, data.success ? 'success' : 'error');
+            } catch (error) {
+                showResult({
+                    test: 'Categories API',
+                    url: `${apiUrl}/categories`,
+                    status: 'error',
+                    error: error.message
+                }, 'error');
+            }
+        }
+        
+        async function testProducts() {
+            showLoading('Тестируем API продуктов...');
+            try {
+                const response = await fetch(`${apiUrl}/products`);
+                const data = await response.json();
+                showResult({
+                    test: 'Products API',
+                    url: `${apiUrl}/products`,
+                    status: data.success ? 'success' : 'error',
+                    data: data
+                }, data.success ? 'success' : 'error');
+            } catch (error) {
+                showResult({
+                    test: 'Products API',
+                    url: `${apiUrl}/products`,
+                    status: 'error',
+                    error: error.message
+                }, 'error');
+            }
+        }
+        
+        async function testAuth() {
+            showLoading('Тестируем аутентификацию...');
+            try {
+                const response = await fetch(`${apiUrl}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone: '+992987654321',
+                        name: 'Test User',
+                        password: 'password123'
+                    })
+                });
+                const data = await response.json();
+                showResult({
+                    test: 'Authentication API',
+                    url: `${apiUrl}/auth/register`,
+                    status: response.ok ? 'success' : 'error',
+                    data: data
+                }, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResult({
+                    test: 'Authentication API',
+                    url: `${apiUrl}/auth/register`,
+                    status: 'error',
+                    error: error.message
+                }, 'error');
+            }
+        }
+        
+        function showLoading(message) {
+            document.getElementById('result').innerHTML = `<div class="info">⏳ ${message}</div>`;
+        }
+        
+        function showResult(data, type) {
+            const resultDiv = document.getElementById('result');
+            let className = type === 'success' ? 'success' : 'error';
+            
+            let content = `<div class="${className}">`;
+            if (type === 'success') {
+                content += `✅ ${data.test || 'Тест'} - Успешно`;
+            } else {
+                content += `❌ ${data.test || 'Тест'} - Ошибка`;
+                if (data.error) {
+                    content += `<br><strong>Ошибка:</strong> ${data.error}`;
+                }
+            }
+            if (data.url) {
+                content += `<br><strong>URL:</strong> ${data.url}`;
+            }
+            content += '</div>';
+            
+            if (data.data) {
+                content += '<pre>' + JSON.stringify(data.data, null, 2) + '</pre>';
+            }
+            
+            resultDiv.innerHTML = content;
+        }
+        
+        // Автоматически запускаем диагностику при загрузке
+        window.onload = () => {
+            testServer();
+        };
+    </script>
+</body>
+</html>

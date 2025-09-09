@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Простой POST тест</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>Тест POST запроса</h1>
+    <button onclick="testPost()">Тестировать POST</button>
+    <div id="result"></div>
+
+    <script>
+    async function testPost() {
+        try {
+            const response = await fetch('http://localhost:8000/api/v1/test-post', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({test: 'данные'})
+            });
+            
+            const result = await response.text();
+            document.getElementById('result').innerHTML = `
+                <h3>Результат:</h3>
+                <p>Статус: ${response.status}</p>
+                <pre>${result}</pre>
+            `;
+        } catch (e) {
+            document.getElementById('result').innerHTML = `<p style="color:red">Ошибка: ${e.message}</p>`;
+        }
+    }
+    </script>
+</body>
+</html>

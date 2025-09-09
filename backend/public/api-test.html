@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестирование API - Sheykh Lavka</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .section { margin-bottom: 30px; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px; white-space: pre-wrap; }
+        .error { background: #f8d7da; color: #721c24; }
+        .success { background: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тестирование API - Sheykh Lavka</h1>
+    
+    <!-- Регистрация -->
+    <div class="section">
+        <h2>📝 Регистрация пользователя</h2>
+        <form id="registerForm">
+            <div class="form-group">
+                <label>Имя:</label>
+                <input type="text" id="reg_name" value="Тест Пользователь" required>
+            </div>
+            <div class="form-group">
+                <label>Телефон:</label>
+                <input type="text" id="reg_phone" value="+998901234567" required>
+            </div>
+            <div class="form-group">
+                <label>Пароль:</label>
+                <input type="password" id="reg_password" value="123456" required>
+            </div>
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+        <div id="registerResult" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Подтверждение кода -->
+    <div class="section">
+        <h2>✅ Подтверждение кода</h2>
+        <form id="verifyForm">
+            <div class="form-group">
+                <label>ID пользователя:</label>
+                <input type="text" id="user_id" placeholder="Получите после регистрации" required>
+            </div>
+            <div class="form-group">
+                <label>Код подтверждения:</label>
+                <input type="text" id="verify_code" placeholder="6-значный код" required>
+            </div>
+            <button type="submit">Подтвердить код</button>
+        </form>
+        <div id="verifyResult" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Вход в систему -->
+    <div class="section">
+        <h2>🔐 Вход в систему</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Телефон:</label>
+                <input type="text" id="login_phone" value="+998901234567" required>
+            </div>
+            <div class="form-group">
+                <label>Пароль:</label>
+                <input type="password" id="login_password" value="123456" required>
+            </div>
+            <button type="submit">Войти</button>
+        </form>
+        <div id="loginResult" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Получение профиля -->
+    <div class="section">
+        <h2>👤 Получить профиль пользователя</h2>
+        <form id="profileForm">
+            <div class="form-group">
+                <label>API Token:</label>
+                <input type="text" id="api_token" placeholder="Получите после входа" required>
+            </div>
+            <button type="submit">Получить профиль</button>
+        </form>
+        <div id="profileResult" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Выход из системы -->
+    <div class="section">
+        <h2>🚪 Выход из системы</h2>
+        <form id="logoutForm">
+            <div class="form-group">
+                <label>API Token:</label>
+                <input type="text" id="logout_token" placeholder="Ваш токен" required>
+            </div>
+            <button type="submit">Выйти</button>
+        </form>
+        <div id="logoutResult" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000/api/v1';
+
+        // Функция для отправки запросов
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                return { response, data };
+            } catch (error) {
+                return { error: error.message };
+            }
+        }
+
+        // Регистрация
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const { response, data, error } = await makeRequest(`${API_BASE}/auth/register`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: document.getElementById('reg_name').value,
+                    phone: document.getElementById('reg_phone').value,
+                    password: document.getElementById('reg_password').value,
+                })
+            });
+
+            const resultDiv = document.getElementById('registerResult');
+            resultDiv.style.display = 'block';
+            
+            if (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Ошибка: ${error}`;
+            } else {
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `Успех! User ID: ${data.data.user_id}\nКод: ${data.data.verification_code}`;
+                    // Автоматически заполняем поля
+                    document.getElementById('user_id').value = data.data.user_id;
+                    document.getElementById('verify_code').value = data.data.verification_code;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = JSON.stringify(data, null, 2);
+                }
+            }
+        });
+
+        // Подтверждение кода
+        document.getElementById('verifyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const { response, data, error } = await makeRequest(`${API_BASE}/auth/verify-code`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    user_id: document.getElementById('user_id').value,
+                    code: document.getElementById('verify_code').value,
+                })
+            });
+
+            const resultDiv = document.getElementById('verifyResult');
+            resultDiv.style.display = 'block';
+            
+            if (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Ошибка: ${error}`;
+            } else {
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `Успех! Токен: ${data.data.token}`;
+                    // Автоматически заполняем токен
+                    document.getElementById('api_token').value = data.data.token;
+                    document.getElementById('logout_token').value = data.data.token;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = JSON.stringify(data, null, 2);
+                }
+            }
+        });
+
+        // Вход в систему
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const { response, data, error } = await makeRequest(`${API_BASE}/auth/login`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    phone: document.getElementById('login_phone').value,
+                    password: document.getElementById('login_password').value,
+                })
+            });
+
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.style.display = 'block';
+            
+            if (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Ошибка: ${error}`;
+            } else {
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `Успех! Токен: ${data.data.token}`;
+                    // Автоматически заполняем токен
+                    document.getElementById('api_token').value = data.data.token;
+                    document.getElementById('logout_token').value = data.data.token;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = JSON.stringify(data, null, 2);
+                }
+            }
+        });
+
+        // Получение профиля
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const token = document.getElementById('api_token').value;
+            const { response, data, error } = await makeRequest(`${API_BASE}/user`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const resultDiv = document.getElementById('profileResult');
+            resultDiv.style.display = 'block';
+            
+            if (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Ошибка: ${error}`;
+            } else {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            }
+        });
+
+        // Выход из системы
+        document.getElementById('logoutForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const token = document.getElementById('logout_token').value;
+            const { response, data, error } = await makeRequest(`${API_BASE}/auth/logout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const resultDiv = document.getElementById('logoutResult');
+            resultDiv.style.display = 'block';
+            
+            if (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Ошибка: ${error}`;
+            } else {
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = 'Успешный выход из системы!';
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = JSON.stringify(data, null, 2);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

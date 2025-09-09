@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Тест создания заказа</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        button { margin: 5px; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🛒 Тест создания заказа</h1>
+    
+    <button onclick="createTestOrder()">Создать тестовый заказ</button>
+    <button onclick="window.open('/admin/orders', '_blank')">Открыть админ-панель</button>
+    
+    <div id="results"></div>
+
+    <script>
+    async function createTestOrder() {
+        const resultDiv = document.getElementById('results');
+        
+        try {
+            console.log('Создание тестового заказа...');
+            
+            const orderData = {
+                delivery_address: 'Тестовый адрес доставки, ул. Примерная 123',
+                delivery_phone: '+992000000001',
+                delivery_name: 'Тестовый пользователь',
+                payment_method: 'cash',
+                comment: 'Тестовый заказ через веб-интерфейс',
+                items: [
+                    {
+                        product_id: 2, // ID товара "Яблоки"
+                        quantity: 3
+                    }
+                ]
+            };
+            
+            // Попробуем оба маршрута
+            let response, result;
+            
+            try {
+                console.log('Пробуем маршрут /orders/create...');
+                response = await fetch('http://localhost:8000/api/v1/orders/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                result = await response.text();
+            } catch (e1) {
+                console.log('Ошибка с /orders/create:', e1.message);
+                console.log('Пробуем маршрут /orders...');
+                response = await fetch('http://localhost:8000/api/v1/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                result = await response.text();
+            }
+            
+            console.log('Ответ сервера:', result);
+            
+            let parsedResult;
+            try {
+                parsedResult = JSON.parse(result);
+            } catch {
+                parsedResult = { message: result };
+            }
+            
+            const resultHtml = `
+                <div class="test-result ${response.ok ? 'success' : 'error'}">
+                    <h3>📦 Результат создания заказа</h3>
+                    <p><strong>Статус:</strong> ${response.status} ${response.statusText}</p>
+                    <p><strong>Успех:</strong> ${parsedResult.success ? 'Да' : 'Нет'}</p>
+                    ${parsedResult.order ? `<p><strong>Номер заказа:</strong> ${parsedResult.order.order_number}</p>` : ''}
+                    ${parsedResult.message ? `<p><strong>Сообщение:</strong> ${parsedResult.message}</p>` : ''}
+                    <p><strong>Полный ответ:</strong></p>
+                    <pre>${JSON.stringify(parsedResult, null, 2)}</pre>
+                </div>
+            `;
+            resultDiv.innerHTML = resultHtml + resultDiv.innerHTML;
+            
+            if (response.ok && parsedResult.success) {
+                alert('Заказ успешно создан! Номер: ' + parsedResult.order.order_number);
+            }
+            
+        } catch (error) {
+            const result = `
+                <div class="test-result error">
+                    <h3>❌ Ошибка создания заказа</h3>
+                    <p><strong>Ошибка:</strong> ${error.message}</p>
+                </div>
+            `;
+            resultDiv.innerHTML = result + resultDiv.innerHTML;
+        }
+    }
+    </script>
+</body>
+</html>

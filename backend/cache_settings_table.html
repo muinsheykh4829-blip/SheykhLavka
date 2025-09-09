@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки кэширования API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .test-mode { background-color: #fff3cd; }
+        .prod-mode { background-color: #d1ecf1; }
+        .center { text-align: center; }
+        h1 { color: #333; }
+        .status { font-weight: bold; color: #28a745; }
+        .note { background: #e9ecef; padding: 10px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>⏰ Настройки времени кэширования API</h1>
+    
+    <div class="note">
+        <strong>Статус:</strong> <span class="status">API_CACHE_TEST_MODE = true</span><br>
+        Режим тестирования включен - используются короткие TTL для проверки работы кэша
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Компонент API</th>
+                <th class="test-mode center">Тестовый режим (сейчас)</th>
+                <th class="prod-mode center">Обычный режим</th>
+                <th>Описание</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Категории товаров</strong></td>
+                <td class="test-mode center">15 секунд</td>
+                <td class="prod-mode center">24 часа (86400 сек)</td>
+                <td>Список категорий меняется редко</td>
+            </tr>
+            <tr>
+                <td><strong>Товары</strong></td>
+                <td class="test-mode center">10 секунд</td>
+                <td class="prod-mode center">1 час (3600 сек)</td>
+                <td>Каталог товаров, цены, наличие</td>
+            </tr>
+            <tr>
+                <td><strong>Баннеры</strong></td>
+                <td class="test-mode center">20 секунд</td>
+                <td class="prod-mode center">12 часов (43200 сек)</td>
+                <td>Рекламные баннеры редко меняются</td>
+            </tr>
+            <tr>
+                <td><strong>Профиль пользователя</strong></td>
+                <td class="test-mode center">12 секунд</td>
+                <td class="prod-mode center">30 минут (1800 сек)</td>
+                <td>Данные профиля пользователя</td>
+            </tr>
+            <tr>
+                <td><strong>Поисковые запросы</strong></td>
+                <td class="test-mode center">8 секунд</td>
+                <td class="prod-mode center">5 минут (300 сек)</td>
+                <td>Результаты поиска товаров</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="note">
+        <h3>🔧 Как изменить время:</h3>
+        <p><strong>1. Для тестового режима:</strong> Отредактируйте файл <code>config/api_cache.php</code> в секции <code>test_ttls</code></p>
+        <p><strong>2. Для обычного режима:</strong> Измените переменные в <code>.env</code> файле (<code>API_CACHE_TTL_*</code>)</p>
+        <p><strong>3. Переключение режимов:</strong> Измените <code>API_CACHE_TEST_MODE</code> в <code>.env</code> файле</p>
+        <p><strong>4. После изменений:</strong> Выполните <code>php artisan config:clear</code> и <code>php artisan cache:clear</code></p>
+    </div>
+
+    <div class="note">
+        <h3>📝 Примечания:</h3>
+        <ul>
+            <li><strong>Корзина</strong> - всегда актуальная с сервера (не кэшируется)</li>
+            <li><strong>Заказы</strong> - всегда актуальная с сервера (не кэшируется)</li>
+            <li><strong>SMS коды</strong> - никогда не кэшируются</li>
+        </ul>
+    </div>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Test - Код 123456</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .code-info {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .code-info .code {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2e7d32;
+            letter-spacing: 3px;
+            margin: 10px 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .success { 
+            background: #d4edda; 
+            border: 1px solid #c3e6cb; 
+            color: #155724;
+        }
+        .error { 
+            background: #f8d7da; 
+            border: 1px solid #f5c6cb; 
+            color: #721c24;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+            border-radius: 0 8px 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 SMS Тест</h1>
+            <p>Режим разработки - фиксированный код для всех пользователей</p>
+        </div>
+
+        <div class="code-info">
+            <div>📱 Код подтверждения для ВСЕХ пользователей:</div>
+            <div class="code">123456</div>
+            <div style="font-size: 12px; color: #666;">Используйте этот код для любого пользователя</div>
+        </div>
+
+        <div class="step">
+            <h3>Шаг 1: Регистрация</h3>
+            <div class="form-group">
+                <label>Имя:</label>
+                <input type="text" id="name" value="Тест Пользователь">
+            </div>
+            <div class="form-group">
+                <label>Телефон:</label>
+                <input type="text" id="phone" value="+998901234567">
+            </div>
+            <div class="form-group">
+                <label>Пароль:</label>
+                <input type="password" id="password" value="testpassword123">
+            </div>
+            <button onclick="register()">Зарегистрироваться</button>
+            <div id="register-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="step">
+            <h3>Шаг 2: Подтверждение кода</h3>
+            <div class="form-group">
+                <label>ID пользователя:</label>
+                <input type="number" id="userId" placeholder="Получится после регистрации">
+            </div>
+            <div class="form-group">
+                <label>Код подтверждения:</label>
+                <input type="text" id="code" value="123456" maxlength="6">
+            </div>
+            <button onclick="verifyCode()">Подтвердить код</button>
+            <div id="verify-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="step">
+            <h3>Шаг 3: Вход в систему</h3>
+            <div class="form-group">
+                <label>Телефон:</label>
+                <input type="text" id="loginPhone" value="+998901234567">
+            </div>
+            <div class="form-group">
+                <label>Пароль:</label>
+                <input type="password" id="loginPassword" value="testpassword123">
+            </div>
+            <button onclick="login()">Войти</button>
+            <div id="login-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://127.0.0.1:8000/api/v1';
+
+        async function makeRequest(url, method = 'GET', data = null) {
+            const options = {
+                method,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                }
+            };
+
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(url, options);
+                const result = await response.json();
+                return { success: response.ok, data: result, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function register() {
+            const result = document.getElementById('register-result');
+            result.style.display = 'block';
+            result.innerHTML = 'Регистрация...';
+            result.className = 'result';
+
+            const data = {
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                password: document.getElementById('password').value,
+                password_confirmation: document.getElementById('password').value
+            };
+
+            const response = await makeRequest(`${baseUrl}/auth/register`, 'POST', data);
+
+            if (response.success) {
+                const userId = response.data.data.user_id;
+                document.getElementById('userId').value = userId;
+                
+                result.className = 'result success';
+                result.innerHTML = `
+                    ✅ Регистрация успешна!<br>
+                    👤 ID пользователя: ${userId}<br>
+                    📱 Код: ${response.data.data.verification_code}<br>
+                    💡 Используйте код <strong>123456</strong> для подтверждения
+                `;
+            } else {
+                result.className = 'result error';
+                result.innerHTML = `❌ Ошибка: ${response.data?.message || response.error}`;
+            }
+        }
+
+        async function verifyCode() {
+            const result = document.getElementById('verify-result');
+            result.style.display = 'block';
+            result.innerHTML = 'Подтверждение кода...';
+            result.className = 'result';
+
+            const data = {
+                user_id: parseInt(document.getElementById('userId').value),
+                code: document.getElementById('code').value
+            };
+
+            const response = await makeRequest(`${baseUrl}/auth/verify-code`, 'POST', data);
+
+            if (response.success) {
+                result.className = 'result success';
+                result.innerHTML = `
+                    ✅ Код подтвержден!<br>
+                    🎉 Аккаунт активирован<br>
+                    🔑 Токен получен: ${response.data.data.token.substring(0, 30)}...
+                `;
+            } else {
+                result.className = 'result error';
+                result.innerHTML = `❌ Ошибка: ${response.data?.message || response.error}`;
+            }
+        }
+
+        async function login() {
+            const result = document.getElementById('login-result');
+            result.style.display = 'block';
+            result.innerHTML = 'Вход в систему...';
+            result.className = 'result';
+
+            const data = {
+                phone: document.getElementById('loginPhone').value,
+                password: document.getElementById('loginPassword').value
+            };
+
+            const response = await makeRequest(`${baseUrl}/auth/login`, 'POST', data);
+
+            if (response.success) {
+                result.className = 'result success';
+                result.innerHTML = `
+                    ✅ Успешный вход!<br>
+                    👤 Пользователь: ${response.data.data.user.name}<br>
+                    📞 Телефон: ${response.data.data.user.phone}<br>
+                    🔑 Токен: ${response.data.data.token.substring(0, 30)}...
+                `;
+            } else {
+                result.className = 'result error';
+                result.innerHTML = `❌ Ошибка: ${response.data?.message || response.error}`;
+            }
+        }
+    </script>
+</body>
+</html>
