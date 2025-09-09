@@ -87,7 +87,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
           color: Colors.grey[100],
         ),
         child: const Center(
-          child: const ModernLoader(),
+          child: ModernLoader(),
         ),
       );
     }
@@ -132,7 +132,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
                         placeholder: (context, url) => Container(
                           color: Colors.grey[200],
                           child: const Center(
-                            child: const ModernLoader(size: 28),
+                            child: ModernLoader(size: 28),
                           ),
                         ),
                         errorWidget: (context, url, error) => Container(

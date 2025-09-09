@@ -115,9 +115,9 @@ class _ArcSpinnerPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final start1 = progress * 2 * math.pi;
-    final sweep1 = 1.6; // ~92°
+    const sweep1 = 1.6; // ~92°
     final start2 = (1 - progress) * 2 * math.pi;
-    final sweep2 = 0.9; // ~52°
+    const sweep2 = 0.9; // ~52°
 
     final rect = Rect.fromCircle(center: center, radius: radius * 0.74);
     final rect2 = Rect.fromCircle(center: center, radius: radius * 0.52);
